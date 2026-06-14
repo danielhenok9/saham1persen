@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pemegang Saham >1% — IDX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=DM+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f6f4ef;--paper:#fff;--paper2:#f0ede7;--paper3:#e8e4dc;
+  --line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.15);
+  --ink:#1b1916;--ink2:#6b6760;--ink3:#a8a49e;
+  --up:#1a6b3c;--up-bg:#e6f4ec;
+  --dn:#b83030;--dn-bg:#fdecea;
+  --bl:#1a3d7a;--bl-bg:#e8eef8;
+  --amber:#7a4f00;--amber-bg:#fdf4e0;
+  --mono:'IBM Plex Mono',monospace;
+  --body:'DM Sans',sans-serif;
+  --serif:'Lora',serif;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.55;min-height:100vh}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;font-family:var(--body)}
+
+nav{height:52px;background:var(--paper);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 1.75rem;position:sticky;top:0;z-index:200}
+.logo{font-family:var(--serif);font-size:16px;font-weight:700;display:flex;align-items:center;gap:9px}
+.logo-badge{background:var(--ink);color:var(--bg);border-radius:5px;font-family:var(--mono);font-size:10px;padding:3px 7px}
+.nav-links{display:flex;gap:1.25rem}
+.nav-links button{font-size:13px;color:var(--ink2);font-weight:500;transition:color .15s;background:none;border:none}
+.nav-links button:hover,.nav-links button.on{color:var(--ink)}
+
+.page{max-width:1140px;margin:0 auto;padding:2rem 1.5rem}
+
+.hero{padding:2.5rem 0 2rem;border-bottom:1px solid var(--line);margin-bottom:2rem}
+.hero-eye{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:var(--ink3);margin-bottom:8px}
+.hero-title{font-family:var(--serif);font-size:32px;font-weight:700;line-height:1.15;letter-spacing:-.4px;margin-bottom:10px}
+.hero-title em{color:var(--up);font-style:normal}
+.hero-desc{color:var(--ink2);font-size:14px;max-width:580px;line-height:1.6}
+.pill-info{display:inline-flex;align-items:center;gap:6px;background:var(--amber-bg);color:var(--amber);font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;margin-top:12px}
+.pill-dot{width:6px;height:6px;background:var(--amber);border-radius:50%}
+
+/* UPLOAD */
+#upload-zone{background:var(--paper);border:2px dashed var(--line2);border-radius:16px;padding:2.5rem 2rem;text-align:center;transition:all .2s;cursor:pointer;margin-bottom:1.5rem}
+#upload-zone:hover,#upload-zone.drag{border-color:var(--bl);background:var(--bl-bg)}
+#upload-zone.loading{cursor:default;border-color:var(--amber);background:var(--amber-bg)}
+.uz-icon{font-size:40px;margin-bottom:.75rem;line-height:1}
+.uz-title{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:8px}
+.uz-desc{color:var(--ink2);font-size:13px;max-width:520px;margin:0 auto 1.25rem;line-height:1.65}
+.uz-desc code{background:var(--paper3);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:11px}
+.uz-btn{background:var(--ink);color:var(--bg);border:none;border-radius:9px;padding:11px 24px;font-size:13px;font-weight:600;margin-bottom:8px;transition:opacity .15s}
+.uz-btn:hover{opacity:.85}
+.uz-sub{font-size:12px;color:var(--ink3)}
+.prog{width:100%;height:5px;background:var(--paper3);border-radius:3px;overflow:hidden;margin-top:1rem;display:none}
+.prog-fill{height:100%;background:var(--amber);border-radius:3px;transition:width .2s;width:0}
+.uz-log{font-size:12px;font-weight:600;margin-top:8px;min-height:20px}
+.uz-log.ok{color:var(--up)}.uz-log.err{color:var(--dn)}.uz-log.warn{color:var(--amber)}
+#file-input{display:none}
+
+/* ADMIN BAR */
+#admin-bar{background:var(--ink);color:var(--bg);padding:10px 1.75rem;display:none;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:52px;z-index:190}
+#admin-bar.show{display:flex}
+.admin-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.6}
+.admin-actions{display:flex;gap:8px;align-items:center}
+.admin-btn{background:rgba(255,255,255,.12);color:var(--bg);border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.admin-btn:hover{background:rgba(255,255,255,.22)}
+.admin-btn.primary{background:var(--up);border-color:var(--up)}
+.admin-btn.primary:hover{opacity:.9}
+.admin-btn:disabled{opacity:.35;cursor:not-allowed}
+.admin-info{font-size:11px;opacity:.7}
+
+/* EMBEDDED DATA BANNER */
+#data-banner{background:var(--up-bg);border:1px solid var(--up-mid,#a8d8bc);border-radius:10px;padding:12px 16px;margin-bottom:1.5rem;display:none;align-items:center;gap:10px}
+#data-banner.show{display:flex}
+.db-icon{font-size:20px}
+.db-text{flex:1;font-size:13px;color:var(--up)}
+.db-text strong{font-weight:700}
+
+/* BULAN BAR */
+.bulan-bar{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:1.5rem;overflow-x:auto}
+.bulan-tab{padding:9px 18px;font-size:13px;font-weight:600;color:var(--ink2);border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap;transition:all .15s;background:none}
+.bulan-tab:hover{color:var(--ink)}.bulan-tab.on{color:var(--ink);border-bottom-color:var(--ink)}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1.75rem}
+.sc{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink3);margin-bottom:5px}
+.sc-val{font-family:var(--serif);font-size:24px;font-weight:700;line-height:1}
+.sc-val.up{color:var(--up)}.sc-val.dn{color:var(--dn)}.sc-val.bl{color:var(--bl)}
+.sc-sub{font-size:11px;color:var(--ink3);margin-top:3px}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:1.25rem}
+.tab{padding:9px 18px;font-size:13px;font-weight:600;color:var(--ink2);border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:all .15s;background:none}
+.tab:hover{color:var(--ink)}.tab.on{color:var(--ink);border-bottom-color:var(--ink)}
+.tab-panel{display:none}.tab-panel.on{display:block}
+
+/* FILTER */
+.fbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;align-items:center}
+.sw{flex:1;min-width:200px;position:relative}
+.sw input{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:8px;font-family:var(--mono);font-size:12px;color:var(--ink);padding:8px 12px 8px 32px;outline:none;transition:border-color .15s}
+.sw input:focus{border-color:var(--line2)}
+.sw input::placeholder{color:var(--ink3)}
+.sw-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--ink3);font-size:14px;pointer-events:none}
+select{background:var(--paper);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-family:var(--body);font-size:13px;padding:7px 28px 7px 10px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a8a49e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center}
+
+/* TABLE */
+.twrap{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead tr{border-bottom:2px solid var(--line)}
+th{padding:9px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--ink3);text-align:left;white-space:nowrap;cursor:pointer;user-select:none;background:var(--paper2)}
+th:hover{color:var(--ink)}
+th.r,td.r{text-align:right}
+tbody tr{border-bottom:1px solid var(--line);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--paper2)}
+td{padding:10px 14px;font-size:13px;vertical-align:middle}
+.code-btn{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--bl);background:none;border:none;padding:0;cursor:pointer;border-bottom:1px dotted var(--bl)}
+.code-btn:hover{border-bottom-style:solid}
+.nm{font-size:12px;font-weight:500;line-height:1.35}
+.nm2{font-size:11px;color:var(--ink3)}
+.pct-num{font-family:var(--mono);font-size:13px;font-weight:500}
+.pct-cell{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.pct-track{width:60px;height:5px;background:var(--paper2);border-radius:3px;flex-shrink:0}
+.pct-fill{height:100%;border-radius:3px;background:var(--bl)}
+.delta{display:inline-flex;align-items:center;padding:2px 8px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:600}
+.delta.up{background:var(--up-bg);color:var(--up)}.delta.dn{background:var(--dn-bg);color:var(--dn)}.delta.fl{background:var(--paper2);color:var(--ink3)}
+.jenis-chip{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--mono);background:var(--paper2);color:var(--ink3)}
+
+/* PAGINATION */
+.pgn{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--line)}
+.pgn-info{font-size:12px;color:var(--ink3)}
+.pgn-btns{display:flex;gap:4px}
+.pb{background:var(--paper);border:1px solid var(--line);color:var(--ink2);border-radius:6px;padding:4px 10px;font-size:12px;transition:all .15s}
+.pb:hover:not(:disabled){color:var(--ink);border-color:var(--line2)}.pb.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}.pb:disabled{opacity:.3;cursor:not-allowed}
+
+/* INVESTOR GRID */
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.inv-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;transition:all .15s}
+.inv-card:hover{border-color:var(--line2);transform:translateY(-1px)}
+.inv-card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+.inv-avatar{width:40px;height:40px;border-radius:9px;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;flex-shrink:0}
+.inv-name{font-size:13px;font-weight:600;line-height:1.3;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inv-sub{font-size:11px;color:var(--ink3)}
+.inv-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.tag{padding:2px 9px;background:var(--paper2);border:1px solid var(--line);border-radius:20px;font-size:11px;color:var(--ink3)}
+.inv-holdings{display:flex;flex-direction:column;gap:6px}
+.ih-row{display:flex;align-items:center;gap:8px}
+.ih-code{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--bl);min-width:40px}
+.ih-track{flex:1;height:4px;background:var(--paper2);border-radius:2px}
+.ih-fill{height:100%;border-radius:2px;background:var(--bl)}
+.ih-pct{font-family:var(--mono);font-size:11px;font-weight:500;min-width:42px;text-align:right}
+
+/* DRAWER */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;display:none;align-items:flex-start;justify-content:flex-end;backdrop-filter:blur(3px)}
+.overlay.open{display:flex}
+.drawer{background:var(--paper);width:min(520px,100vw);height:100vh;overflow-y:auto;border-left:1px solid var(--line);box-shadow:-8px 0 32px rgba(0,0,0,.1);animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateX(40px);opacity:.5}to{transform:translateX(0);opacity:1}}
+.dr-head{padding:1.25rem 1.5rem;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--paper);z-index:10}
+.dr-close{background:var(--paper2);border:none;width:30px;height:30px;border-radius:6px;font-size:16px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.dr-close:hover{background:var(--paper3);color:var(--ink)}
+.dr-body{padding:1.5rem}
+.dr-sec{margin-bottom:1.75rem}
+.dr-sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.1px;color:var(--ink3);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.mrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.mrow:last-child{border-bottom:none}
+.mlbl{font-family:var(--mono);font-size:11px;color:var(--ink3);min-width:62px}
+.mbar-wrap{flex:1;display:flex;align-items:center;gap:7px}
+.mbar-bg{flex:1;height:6px;background:var(--paper2);border-radius:3px}
+.mbar-fill{height:100%;border-radius:3px;background:var(--bl);transition:width .4s}
+.mpct{font-family:var(--mono);font-size:12px;font-weight:500;min-width:44px;text-align:right}
+.empty-msg{text-align:center;padding:3rem;color:var(--ink3);font-size:13px}
+.group-pill{padding:7px 14px;border-radius:20px;font-size:13px;border:1px solid var(--line);background:var(--paper);color:var(--ink2);cursor:pointer;transition:all .15s}
+.group-pill:hover{border-color:var(--line2);color:var(--ink)}
+.gp-all{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.gp-lokal{background:var(--up-bg);color:var(--up);border-color:var(--up)}
+.gp-asing{background:var(--bl-bg);color:var(--bl);border-color:var(--bl)}
+
+/* INSTRUKSI UPLOAD MODAL */
+#upload-instructions{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.instr-box{
+  background:var(--paper);border-radius:16px;padding:2rem;
+  width:min(420px,92vw);box-shadow:0 8px 40px rgba(0,0,0,.2);
+}
+.instr-title{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:4px;color:var(--up)}
+.instr-sub{font-size:13px;color:var(--ink2);margin-bottom:1.25rem}
+.instr-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:1.5rem}
+.instr-step{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;background:var(--paper2);border-radius:8px}
+.instr-num{background:var(--ink);color:var(--bg);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.instr-text{font-size:13px;line-height:1.5}
+.instr-text strong{font-weight:600}
+.instr-text code{background:var(--paper3);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px}
+.instr-close{width:100%;background:var(--ink);color:var(--bg);border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.instr-close:hover{opacity:.85}
+
+/* LOGIN MODAL */
+#login-modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.login-box{
+  background:var(--paper);border-radius:16px;padding:2rem;
+  width:min(360px,90vw);box-shadow:0 8px 40px rgba(0,0,0,.18);
+}
+.login-title{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--ink3);margin-bottom:1.5rem}
+.login-field{margin-bottom:12px}
+.login-field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ink3);margin-bottom:5px}
+.login-field input{
+  width:100%;border:1px solid var(--line2);border-radius:8px;
+  padding:10px 12px;font-size:14px;font-family:var(--mono);
+  color:var(--ink);outline:none;transition:border-color .15s;background:var(--bg);
+}
+.login-field input:focus{border-color:var(--bl)}
+.login-err{font-size:12px;color:var(--dn);min-height:18px;margin-bottom:10px}
+.login-actions{display:flex;gap:8px}
+.login-submit{
+  flex:1;background:var(--ink);color:var(--bg);border:none;
+  border-radius:8px;padding:11px;font-size:14px;font-weight:600;
+  cursor:pointer;transition:opacity .15s;
+}
+.login-submit:hover{opacity:.85}
+.login-cancel{
+  background:var(--paper2);color:var(--ink2);border:1px solid var(--line);
+  border-radius:8px;padding:11px 16px;font-size:14px;cursor:pointer;
+}
+.login-cancel:hover{background:var(--paper3)}
+@media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)}.hm,th.hm{display:none}nav{padding:0 1rem}.page{padding:1.25rem 1rem}.drawer{width:100vw}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo" onclick="_logoClick()" style="cursor:pointer;user-select:none" title="Klik 3x untuk admin"><div class="logo-badge">1%</div>Saham1Persen.id</div>
+  <div class="nav-links">
+    <button onclick="showTab('perubahan')" id="nav-perubahan" class="on">Perubahan</button>
+    <button onclick="showTab('semua')" id="nav-semua">Semua</button>
+    <button onclick="showTab('investor')" id="nav-investor">Investor</button>
+    <button onclick="showTab('emiten')" id="nav-emiten">Emiten</button>
+  </div>
+</nav>
+
+<!-- LOGIN MODAL -->
+<div id="login-modal" onclick="if(event.target===this)cancelLogin()">
+  <div class="login-box">
+    <div class="login-title">🔒 Admin Login</div>
+    <div class="login-sub">Masukkan username dan password admin</div>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="Username" onkeydown="loginKeydown(event)" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="Password" onkeydown="loginKeydown(event)" autocomplete="current-password">
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-actions">
+      <button class="login-cancel" onclick="cancelLogin()">Batal</button>
+      <button class="login-submit" onclick="doLogin()">Masuk →</button>
+    </div>
+  </div>
+</div>
+
+<!-- INSTRUKSI UPLOAD -->
+<div id="upload-instructions" onclick="if(event.target===this)closeInstructions()">
+  <div class="instr-box">
+    <div class="instr-title">✅ File Berhasil Didownload!</div>
+    <div class="instr-sub">Sekarang upload ke tiiny.host supaya semua pengunjung bisa lihat data terbaru:</div>
+    <div class="instr-steps">
+      <div class="instr-step">
+        <div class="instr-num">1</div>
+        <div class="instr-text">Buka <strong>tiiny.host</strong> di tab baru → klik <strong>Login</strong></div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-num">2</div>
+        <div class="instr-text">Klik site <strong>1percentinvestor</strong> → klik tombol <strong>Update</strong> atau <strong>Edit</strong></div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-num">3</div>
+        <div class="instr-text">Upload file <code>index.html</code> yang baru saja didownload</div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-num">4</div>
+        <div class="instr-text">Selesai! Pengunjung buka situs → <strong>data langsung tampil</strong> tanpa perlu upload apapun</div>
+      </div>
+    </div>
+    <button class="instr-close" onclick="closeInstructions()">Mengerti, saya akan upload sekarang →</button>
+  </div>
+</div>
+
+<!-- ADMIN BAR: hanya tampil saat ?admin di URL -->
+<div id="admin-bar">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="admin-label">🔒 Admin</span>
+    <span class="admin-info" id="admin-info">Belum ada data — upload PDF dulu</span>
+  </div>
+  <div class="admin-actions">
+    <button class="admin-btn" onclick="document.getElementById('file-input').click()">📄 Upload PDF</button>
+    <button class="admin-btn primary" id="btn-publish" onclick="publishData()" disabled>⬇ Download & Deploy ke Netlify</button>
+  </div>
+</div>
+
+<div class="page">
+  <!-- DATA BANNER: tampil saat data embedded -->
+  <div id="data-banner">
+    <span class="db-icon">✅</span>
+    <div class="db-text" id="data-banner-text">Data tersedia</div>
+  </div>
+  <div class="hero">
+    <div class="hero-eye">Data Resmi KSEI · BEI · Wajib Lapor OJK</div>
+    <h1 class="hero-title">Pemegang Saham <em>>1%</em><br>Semua Emiten IDX</h1>
+    <p class="hero-desc">Upload file PDF <strong>"Data Kepemilikan Lebih Dari 1%"</strong> dari situs BEI. Bisa upload beberapa PDF beda bulan sekaligus untuk melihat perubahan bulanan.</p>
+    <div class="pill-info"><span class="pill-dot"></span><span id="update-text">Belum ada data — upload PDF di bawah</span></div>
+  </div>
+
+  <div id="upload-zone" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)" onclick="document.getElementById('file-input').click()" style="display:none">
+    <div class="uz-icon" id="uz-icon">📄</div>
+    <div class="uz-title" id="uz-title">Drag & Drop PDF dari IDX ke sini</div>
+    <div class="uz-desc" id="uz-desc">
+      Buka <code>idx.co.id → Berita & Pengumuman</code> → cari <strong>"pemegang saham 1%"</strong> →
+      download PDF → drag ke sini.<br>Bisa pilih <strong>beberapa PDF</strong> (beda bulan) sekaligus.
+    </div>
+    <button class="uz-btn" onclick="event.stopPropagation();document.getElementById('file-input').click()">📂 Pilih File PDF</button><br>
+    <span class="uz-sub">Format PDF dari IDX/KSEI · Multi-file didukung</span>
+    <div class="prog" id="prog"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="uz-log" id="uz-log"></div>
+  </div>
+  <input type="file" id="file-input" accept=".pdf" multiple onchange="handleFiles(this.files)">
+
+  <div id="data-sec" style="display:none">
+    <div class="bulan-bar" id="bulan-bar"></div>
+    <div class="stats-row">
+      <div class="sc"><div class="sc-lbl">Total Pemegang</div><div class="sc-val bl" id="s-total">—</div><div class="sc-sub">Bulan ini</div></div>
+      <div class="sc"><div class="sc-lbl">Emiten</div><div class="sc-val" id="s-emiten">—</div><div class="sc-sub">Kode unik</div></div>
+      <div class="sc"><div class="sc-lbl">Investor Unik</div><div class="sc-val" id="s-inv">—</div><div class="sc-sub">Nama berbeda</div></div>
+      <div class="sc"><div class="sc-lbl">Naik ≥0.5%</div><div class="sc-val up" id="s-up">—</div><div class="sc-sub">vs bulan lalu</div></div>
+      <div class="sc"><div class="sc-lbl">Turun ≥0.5%</div><div class="sc-val dn" id="s-dn">—</div><div class="sc-sub">vs bulan lalu</div></div>
+    </div>
+    <div class="tabs">
+      <button class="tab on" onclick="showTab('perubahan')">Perubahan</button>
+      <button class="tab" onclick="showTab('semua')">Semua Kepemilikan</button>
+      <button class="tab" onclick="showTab('investor')">Per Investor</button>
+      <button class="tab" onclick="showTab('emiten')">Per Emiten</button>
+    </div>
+
+    <div class="tab-panel on" id="tab-perubahan">
+      <div class="fbar">
+        <div class="sw"><span class="sw-icon">⌕</span><input id="p-q" placeholder="Cari kode atau nama investor…" oninput="rP()"></div>
+        <select id="p-jenis" onchange="rP()"><option value="">Semua</option><option value="up">▲ Naik</option><option value="dn">▼ Turun</option></select>
+        <select id="p-sort" onchange="rP()"><option value="delta">Delta Terbesar</option><option value="pct">% ↓</option><option value="kode">Kode A→Z</option></select>
+      </div>
+      <div class="twrap">
+        <table><thead><tr><th>Emiten</th><th>Pemegang Saham</th><th class="r hm">Jenis</th><th class="r hm">Bulan Lalu</th><th class="r">Bulan Ini</th><th class="r">Perubahan</th></tr></thead>
+        <tbody id="p-body"></tbody></table>
+        <div class="pgn"><div class="pgn-info" id="p-info"></div><div class="pgn-btns" id="p-btns"></div></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-semua">
+      <div class="fbar">
+        <div class="sw"><span class="sw-icon">⌕</span><input id="a-q" placeholder="Cari kode, nama emiten, atau investor…" oninput="rA()"></div>
+        <select id="a-sort" onchange="rA()"><option value="pct">% ↓</option><option value="kode">Kode A→Z</option><option value="inv">Investor A→Z</option></select>
+      </div>
+      <div class="twrap">
+        <table><thead><tr><th>Kode</th><th>Nama Emiten</th><th>Pemegang Saham</th><th class="r hm">Jenis</th><th class="r hm">Total Saham</th><th class="r">%</th></tr></thead>
+        <tbody id="a-body"></tbody></table>
+        <div class="pgn"><div class="pgn-info" id="a-info"></div><div class="pgn-btns" id="a-btns"></div></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-investor">
+      <div class="fbar">
+        <div class="sw"><span class="sw-icon">⌕</span><input id="i-q" placeholder="Cari nama investor…" oninput="rI()"></div>
+        <select id="i-sort" onchange="rI()"><option value="count">Emiten Terbanyak</option><option value="maxpct">% Terbesar</option><option value="name">Nama A→Z</option></select>
+        <select id="i-asal" onchange="rI()">
+          <option value="">Semua Asal</option>
+          <option value="lokal">🇮🇩 Lokal Indonesia</option>
+          <option value="asing">🌏 Asing</option>
+        </select>
+        <select id="i-negara" onchange="rI()"><option value="">Semua Negara</option></select>
+      </div>
+      <div id="i-group-header" style="display:none;margin-bottom:1rem"></div>
+      <div id="i-grid" class="inv-grid"></div>
+      <div class="pgn" style="background:var(--paper);border:1px solid var(--line);border-radius:0 0 12px 12px;margin-top:-1px">
+        <div class="pgn-info" id="i-info"></div><div class="pgn-btns" id="i-btns"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-emiten">
+      <div class="fbar">
+        <div class="sw"><span class="sw-icon">⌕</span><input id="e-q" placeholder="Cari kode atau nama emiten…" oninput="rE()"></div>
+        <select id="e-sort" onchange="rE()"><option value="count">Investor Terbanyak</option><option value="kode">Kode A→Z</option><option value="maxpct">% Terbesar</option></select>
+      </div>
+      <div class="twrap">
+        <table><thead><tr><th>Kode</th><th>Nama Emiten</th><th class="r">Investor</th><th class="r hm">% Terbesar</th><th>Pemegang Terbesar</th></tr></thead>
+        <tbody id="e-body"></tbody></table>
+        <div class="pgn"><div class="pgn-info" id="e-info"></div><div class="pgn-btns" id="e-btns"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeDr(event)">
+  <div class="drawer" id="drawer">
+    <div class="dr-head">
+      <div>
+        <div style="font-size:11px;color:var(--ink3);margin-bottom:2px" id="dr-eye"></div>
+        <div style="font-family:var(--serif);font-size:18px;font-weight:700;line-height:1.2" id="dr-title"></div>
+      </div>
+      <button class="dr-close" onclick="closeDr()">✕</button>
+    </div>
+    <div class="dr-body" id="dr-body"></div>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ── STATE ────────────────────────────────────────────────────────
+let RAW = [];
+let BULANS = [], CUR = '', PREV = '';
+const PG = {p:1,a:1,i:1,e:1};
+const PP = {p:15,a:15,i:24,e:20};
+
+// ── PARSER CONSTANTS ─────────────────────────────────────────────
+const MONTH_MAP = {
+  jan:'01',feb:'02',mar:'03',apr:'04',may:'05',mei:'05',
+  jun:'06',jul:'07',aug:'08',agt:'08',sep:'09',
+  oct:'10',okt:'10',nov:'11',dec:'12',des:'12'
+};
+
+// Semua kode tipe investor yang ada di data IDX
+const INV_TYPES = new Set([
+  'CP','ID','IS','IB','SC','MF','YY','FD','GV','PE',
+  'OT','MM','RE','PF','IC','OB','RC','DC','IF','VC'
+]);
+
+// ── DRAG & DROP ───────────────────────────────────────────────────
+function onDrag(e,on){e.preventDefault();document.getElementById('upload-zone').classList.toggle('drag',on)}
+function onDrop(e){e.preventDefault();document.getElementById('upload-zone').classList.remove('drag');handleFiles(e.dataTransfer.files)}
+
+// ── HANDLE FILES ──────────────────────────────────────────────────
+async function handleFiles(files) {
+  if (!files.length) return;
+  const zone = document.getElementById('upload-zone');
+  zone.classList.add('loading');
+  zone.onclick = null;
+  showProg(true); log('Memulai…', 0, 'warn');
+
+  let allNew = [];
+  for (let fi = 0; fi < files.length; fi++) {
+    const file = files[fi];
+    log(`📄 Membaca ${file.name}…`, (fi / files.length) * 20, 'warn');
+    try {
+      const records = await parsePdf(file);
+      allNew = allNew.concat(records);
+      log(`✓ ${file.name} — ${records.length} records`, ((fi+1)/files.length)*90, 'ok');
+    } catch(err) {
+      log(`⚠ ${file.name}: ${err.message}`, null, 'err');
+    }
+  }
+
+  showProg(false);
+  zone.classList.remove('loading');
+  zone.onclick = () => document.getElementById('file-input').click();
+
+  if (allNew.length > 0) {
+    const newBulans = new Set(allNew.map(r=>r.bulan));
+    RAW = RAW.filter(r=>!newBulans.has(r.bulan)).concat(allNew);
+    RAW.sort((a,b)=>a.bulan.localeCompare(b.bulan)||a.kode_emiten.localeCompare(b.kode_emiten));
+    log(`✅ ${allNew.length.toLocaleString('id')} records dari ${newBulans.size} bulan berhasil dimuat!`, 100, 'ok');
+    document.getElementById('uz-icon').textContent = '✅';
+    document.getElementById('uz-title').textContent = 'Data berhasil dimuat — upload lagi untuk tambah bulan';
+    document.getElementById('uz-desc').innerHTML =
+      `<strong>${RAW.length.toLocaleString('id')} records</strong> dari <strong>${[...new Set(RAW.map(r=>r.bulan))].length} bulan</strong>. Drop PDF lagi untuk menambah bulan.`;
+    initView();
+  } else {
+    log('❌ Tidak ada data yang berhasil diparse. Pastikan PDF adalah "Data Kepemilikan Lebih Dari 1%" dari IDX.', null, 'err');
+  }
+}
+
+// ── PDF PARSER ────────────────────────────────────────────────────
+async function parsePdf(file) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+
+  // Ekstrak semua teks dari semua halaman jadi satu string
+  let fullText = '';
+  for (let pn = 1; pn <= pdf.numPages; pn++) {
+    const page = await pdf.getPage(pn);
+    const content = await page.getTextContent();
+    // Gabungkan semua string dengan spasi
+    fullText += content.items.map(i => i.str).join(' ') + ' ';
+  }
+
+  return parseIDXText(fullText);
+}
+
+// ── CORE PARSER: Format IDX KSEI ─────────────────────────────────
+// Format: DATE CODE ISSUER_NAME Tbk INVESTOR_NAME [TYPE] [L/F] [...] SCRIPLESS SCRIP TOTAL PCT
+// Contoh: 31-Mar-2026 AADI ADARO ANDALAN INDONESIA Tbk ADARO STRATEGIC INVESTMENTS CP L INDONESIA 3.200.142.830 0 3.200.142.830 41,10
+function parseIDXText(text) {
+  const records = [];
+
+  // Pecah per record: setiap record diawali tanggal DD-Mon-YYYY
+  const dateRe = /(?=\d{2}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|Mei|Agt|Okt|Des)-\d{4})/gi;
+  const chunks = text.split(dateRe).filter(c => c.trim());
+
+  for (const chunk of chunks) {
+    const rec = parseChunk(chunk.trim().replace(/\s+/g, ' '));
+    if (rec) records.push(rec);
+  }
+
+  // Deduplicate: kode + pemegang + bulan unik
+  const seen = new Set();
+  return records.filter(r => {
+    const key = `${r.bulan}|${r.kode_emiten}|${r.nama_pemegang}`;
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+}
+
+function parseChunk(chunk) {
+  const tokens = chunk.split(' ').filter(Boolean);
+  if (tokens.length < 6) return null;
+
+  // [0] DATE
+  const bulan = dateToBuilan(tokens[0]);
+  if (!bulan) return null;
+
+  // [1] SHARE CODE: 2-6 huruf kapital
+  const code = tokens[1];
+  if (!/^[A-Z]{2,6}$/.test(code)) return null;
+
+  // Dari kanan: cari PERCENTAGE dulu — format NN,NN (koma desimal)
+  const lastTok = tokens[tokens.length - 1];
+  if (!/^\d{1,3},\d{2,4}$/.test(lastTok)) return null;
+  const pct = parseFloat(lastTok.replace(',', '.'));
+  if (pct < 1 || pct > 100) return null;
+
+  // Sebelum pct: cari 3 angka berurutan ke kiri (scripless, scrip, total)
+  // Angka bisa: "3.200.142.830" atau "0"
+  let numCount = 0, numEndIdx = tokens.length - 2;
+  for (let i = tokens.length - 2; i >= 2 && numCount < 3; i--) {
+    if (/^[\d.]+$/.test(tokens[i])) { numCount++; numEndIdx = i; }
+    else break;
+  }
+  if (numCount < 1) return null;
+
+  // Middle tokens: antara code[1] dan angka pertama
+  const mid = tokens.slice(2, numEndIdx);
+  if (!mid.length) return null;
+
+  // Cari posisi "Tbk" atau "TBK" di middle tokens
+  const tbkIdx = mid.findIndex(t => /^tbk$/i.test(t));
+  if (tbkIdx === -1) return null;
+
+  const issuerName = mid.slice(0, tbkIdx + 1).join(' ');
+  const rest = mid.slice(tbkIdx + 1); // sisa setelah Tbk
+
+  // Dari rest: cari tipe investor (2-char dari INV_TYPES)
+  let invTypeIdx = -1;
+  for (let i = 0; i < rest.length; i++) {
+    if (INV_TYPES.has(rest[i])) { invTypeIdx = i; break; }
+  }
+
+  let investorName, jenis = '—', lf = '', negara = 'Indonesia';
+
+  if (invTypeIdx > -1) {
+    investorName = rest.slice(0, invTypeIdx).join(' ').trim();
+    jenis = rest[invTypeIdx];
+    let afterTypeIdx = invTypeIdx + 1;
+    if (rest[afterTypeIdx] === 'L' || rest[afterTypeIdx] === 'F') {
+      lf = rest[afterTypeIdx];
+      afterTypeIdx++;
+    }
+    // Sisa setelah L/F = NATIONALITY / DOMICILE (semua caps, bukan angka)
+    const countryTokens = rest.slice(afterTypeIdx).filter(t => /^[A-Z]/.test(t) && !/^\d/.test(t));
+    if (countryTokens.length > 0) {
+      // Normalize nama negara
+      negara = normalizeNegara(countryTokens.join(' '));
+    } else {
+      negara = lf === 'F' ? 'Asing' : 'Indonesia';
+    }
+  } else {
+    investorName = rest.join(' ').trim();
+    negara = 'Indonesia';
+  }
+
+  // Bersihkan nama investor dari artefak (trailing PT, TBK)
+  investorName = investorName.replace(/\s+(PT|TBK)\s*$/i, '').trim();
+
+  if (!investorName || !issuerName) return null;
+
+  const totalIdx = tokens.length - 2;
+  const total = parseInt((tokens[totalIdx] || '0').replace(/\./g, '')) || 0;
+
+  return {
+    bulan,
+    kode_emiten: code,
+    nama_emiten: issuerName,
+    nama_pemegang: investorName,
+    jenis: jenis + (lf ? '/' + lf : ''),
+    lokal: lf !== 'F',
+    negara,
+    jumlah_saham: total,
+    persentase: pct,
+  };
+}
+
+// Normalisasi nama negara dari IDX (bisa INDONESIAN, SINGAPORE, AMERICAN, dll)
+function normalizeNegara(raw) {
+  const t = raw.toUpperCase().trim();
+  if (/INDONESIA/.test(t)) return 'Indonesia';
+  if (/SINGAPORE|SINGAPURA/.test(t)) return 'Singapura';
+  if (/UNITED STATES|AMERICAN|AMERIKA/.test(t)) return 'Amerika Serikat';
+  if (/BRITISH VIRGIN|BVI/.test(t)) return 'British Virgin Islands';
+  if (/CAYMAN/.test(t)) return 'Cayman Islands';
+  if (/HONG KONG/.test(t)) return 'Hong Kong';
+  if (/JAPAN|JEPANG/.test(t)) return 'Jepang';
+  if (/NETHERLANDS|BELANDA/.test(t)) return 'Belanda';
+  if (/UNITED KINGDOM|BRITISH|INGGRIS/.test(t)) return 'Inggris';
+  if (/MALAYSIA/.test(t)) return 'Malaysia';
+  if (/AUSTRALIA/.test(t)) return 'Australia';
+  if (/CHINA|CHINESE/.test(t)) return 'China';
+  if (/KOREA/.test(t)) return 'Korea';
+  if (/MAURITIUS/.test(t)) return 'Mauritius';
+  if (/LUXEMBOURG/.test(t)) return 'Luksemburg';
+  if (/GERMANY|JERMAN/.test(t)) return 'Jerman';
+  if (/FRANCE|PRANCIS/.test(t)) return 'Prancis';
+  if (/NORWAY|NORWEGIA/.test(t)) return 'Norwegia';
+  // Ambil kata pertama sebagai fallback
+  const first = raw.split(' ')[0];
+  return first.charAt(0) + first.slice(1).toLowerCase();
+}
+
+function dateToBuilan(s) {
+  const m = s.match(/^(\d{2})-([A-Za-z]{3})-(\d{4})$/);
+  if (!m) return null;
+  const mon = MONTH_MAP[m[2].toLowerCase()];
+  return mon ? `${m[3]}-${mon}` : null;
+}
+
+// ── LOCALSTORAGE PERSISTENCE ──────────────────────────────────────
+const LS_KEY = 'saham1persen_data';
+
+function saveToStorage() {
+  try {
+    const payload = JSON.stringify(RAW);
+    // localStorage limit ~5MB — cek dulu ukurannya
+    if (payload.length > 4.5 * 1024 * 1024) {
+      console.warn('Data terlalu besar untuk localStorage, skip save');
+      return;
+    }
+    localStorage.setItem(LS_KEY, payload);
+  } catch(e) {
+    console.warn('localStorage save gagal:', e.message);
+  }
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data) || data.length === 0) return false;
+    RAW = data;
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+function hapusBulan(bulan) {
+  if (!confirm(`Hapus data bulan ${blabel(bulan)}?`)) return;
+  RAW = RAW.filter(r => r.bulan !== bulan);
+  saveToStorage();
+  if (RAW.length === 0) {
+    // Reset ke state awal
+    document.getElementById('data-sec').style.display = 'none';
+    document.getElementById('uz-icon').textContent = '📄';
+    document.getElementById('uz-title').textContent = 'Drag & Drop PDF dari IDX ke sini';
+    document.getElementById('uz-desc').innerHTML = `Buka <code>idx.co.id → Berita & Pengumuman</code> → cari <strong>"pemegang saham 1%"</strong> → download PDF → drag ke sini.<br>Bisa pilih <strong>beberapa PDF</strong> (beda bulan) sekaligus.`;
+    document.getElementById('update-text').textContent = 'Belum ada data — upload PDF di bawah';
+    return;
+  }
+  initView();
+}
+
+// ── INIT VIEW ─────────────────────────────────────────────────────
+function initView() {
+  BULANS = [...new Set(RAW.map(r=>r.bulan))].sort();
+  CUR = BULANS[BULANS.length-1];
+  const pi = BULANS.indexOf(CUR)-1;
+  PREV = pi>=0 ? BULANS[pi] : '';
+  document.getElementById('data-sec').style.display='block';
+  document.getElementById('update-text').textContent = `${BULANS.length} bulan tersedia · ${RAW.length.toLocaleString('id')} records total`;
+  saveToStorage();
+  updateAdminInfo();
+  renderBulan(); renderStats(); rP(); rA(); rI(); rE();
+}
+
+// ── BULAN ─────────────────────────────────────────────────────────
+function renderBulan() {
+  document.getElementById('bulan-bar').innerHTML =
+    BULANS.map(b=>
+      `<div style="display:flex;align-items:center">
+        <button class="bulan-tab${b===CUR?' on':''}" onclick="setBulan('${b}')">${blabel(b)}</button>
+        <button onclick="hapusBulan('${b}')" title="Hapus bulan ini"
+          style="background:none;border:none;color:var(--ink3);font-size:11px;padding:0 6px 0 2px;cursor:pointer;transition:color .15s"
+          onmouseover="this.style.color='var(--dn)'" onmouseout="this.style.color='var(--ink3)'">✕</button>
+      </div>`
+    ).join('') +
+    `<button class="bulan-tab" onclick="document.getElementById('file-input').click()"
+      style="color:var(--bl);gap:4px;display:flex;align-items:center">
+      <span style="font-size:18px;line-height:1;margin-top:-1px">+</span> Tambah Bulan
+    </button>`;
+}
+function setBulan(b) {
+  CUR=b; const pi=BULANS.indexOf(b)-1; PREV=pi>=0?BULANS[pi]:'';
+  PG.p=PG.a=PG.i=PG.e=1;
+  renderBulan(); renderStats(); rP(); rA(); rI(); rE();
+}
+
+// ── STATS ─────────────────────────────────────────────────────────
+function renderStats() {
+  const cur=RAW.filter(r=>r.bulan===CUR), prev=PREV?RAW.filter(r=>r.bulan===PREV):[];
+  let ups=0, dns=0;
+  cur.forEach(c=>{
+    const p=prev.find(r=>r.kode_emiten===c.kode_emiten&&r.nama_pemegang===c.nama_pemegang);
+    if(!p) return;
+    const d=c.persentase-p.persentase;
+    if(d>=0.5) ups++; else if(d<=-0.5) dns++;
+  });
+  document.getElementById('s-total').textContent=cur.length.toLocaleString('id');
+  document.getElementById('s-emiten').textContent=new Set(cur.map(r=>r.kode_emiten)).size.toLocaleString('id');
+  document.getElementById('s-inv').textContent=new Set(cur.map(r=>r.nama_pemegang)).size.toLocaleString('id');
+  document.getElementById('s-up').textContent=ups;
+  document.getElementById('s-dn').textContent=dns;
+}
+
+// ── TABS ──────────────────────────────────────────────────────────
+function showTab(name) {
+  const names=['perubahan','semua','investor','emiten'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',names[i]===name));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');
+  document.querySelectorAll('.nav-links button').forEach((b,i)=>b.classList.toggle('on',names[i]===name));
+}
+
+// ── TAB: PERUBAHAN ────────────────────────────────────────────────
+function rP() {
+  const q=v('p-q').toLowerCase(), jenis=v('p-jenis'), sort=v('p-sort');
+  const cur=RAW.filter(r=>r.bulan===CUR);
+  const prev=PREV?RAW.filter(r=>r.bulan===PREV):[];
+  let rows=cur.map(c=>{
+    const p=prev.find(r=>r.kode_emiten===c.kode_emiten&&r.nama_pemegang===c.nama_pemegang);
+    const prevPct=p?p.persentase:null;
+    const delta=prevPct!==null?parseFloat((c.persentase-prevPct).toFixed(2)):null;
+    return{...c,prevPct,delta};
+  }).filter(r=>r.delta!==null&&Math.abs(r.delta)>=0.5);
+  rows=rows.filter(r=>{
+    if(q&&!r.kode_emiten.toLowerCase().includes(q)&&!r.nama_emiten.toLowerCase().includes(q)&&!r.nama_pemegang.toLowerCase().includes(q))return false;
+    if(jenis==='up'&&r.delta<=0)return false;
+    if(jenis==='dn'&&r.delta>=0)return false;
+    return true;
+  });
+  if(sort==='delta')rows.sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta));
+  else if(sort==='pct')rows.sort((a,b)=>b.persentase-a.persentase);
+  else rows.sort((a,b)=>a.kode_emiten.localeCompare(b.kode_emiten));
+  const sl=slc(rows,'p');
+  document.getElementById('p-body').innerHTML=sl.length?sl.map(r=>{
+    const cls=r.delta>0?'up':'dn', sign=r.delta>0?'▲ +':'▼ ';
+    return`<tr>
+      <td><button class="code-btn" onclick="openEmiten('${r.kode_emiten}')">${r.kode_emiten}</button><div class="nm2">${r.nama_emiten}</div></td>
+      <td><div class="nm">${r.nama_pemegang}</div></td>
+      <td class="r hm"><span class="jenis-chip">${r.jenis}</span></td>
+      <td class="r hm"><span class="pct-num">${r.prevPct!=null?r.prevPct.toFixed(2)+'%':'—'}</span></td>
+      <td class="r"><span class="pct-num">${r.persentase.toFixed(2)}%</span></td>
+      <td class="r"><span class="delta ${cls}">${sign}${Math.abs(r.delta).toFixed(2)}%</span></td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="6" class="empty-msg">${PREV?'Tidak ada perubahan ≥0.5% pada periode ini':'Upload PDF bulan lain untuk lihat perubahan'}</td></tr>`;
+  pgn('p',rows.length);
+}
+
+// ── TAB: SEMUA ────────────────────────────────────────────────────
+function rA() {
+  const q=v('a-q').toLowerCase(), sort=v('a-sort');
+  let rows=RAW.filter(r=>r.bulan===CUR).filter(r=>
+    !q||r.kode_emiten.toLowerCase().includes(q)||r.nama_emiten.toLowerCase().includes(q)||r.nama_pemegang.toLowerCase().includes(q)
+  );
+  if(sort==='pct')rows.sort((a,b)=>b.persentase-a.persentase);
+  else if(sort==='kode')rows.sort((a,b)=>a.kode_emiten.localeCompare(b.kode_emiten));
+  else rows.sort((a,b)=>a.nama_pemegang.localeCompare(b.nama_pemegang));
+  const sl=slc(rows,'a');
+  document.getElementById('a-body').innerHTML=sl.length?sl.map(r=>{
+    const w=Math.min(r.persentase,100);
+    return`<tr>
+      <td><button class="code-btn" onclick="openEmiten('${r.kode_emiten}')">${r.kode_emiten}</button></td>
+      <td><div class="nm">${r.nama_emiten}</div></td>
+      <td><div class="nm">${r.nama_pemegang}</div></td>
+      <td class="r hm"><span class="jenis-chip">${r.jenis}</span></td>
+      <td class="r hm"><span class="nm2">${r.jumlah_saham?r.jumlah_saham.toLocaleString('id'):'—'}</span></td>
+      <td class="r"><div class="pct-cell"><div class="pct-track"><div class="pct-fill" style="width:${w}%"></div></div><span class="pct-num">${r.persentase.toFixed(2)}%</span></div></td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="6" class="empty-msg">Tidak ada data</td></tr>`;
+  pgn('a',rows.length);
+}
+
+// ── TAB: INVESTOR ─────────────────────────────────────────────────
+function rI() {
+  const q=v('i-q').toLowerCase(), sort=v('i-sort');
+  const asal=v('i-asal'), negFilter=v('i-negara');
+
+  // Build investor map dari RAW bulan ini
+  const map={};
+  RAW.filter(r=>r.bulan===CUR).forEach(r=>{
+    if(!map[r.nama_pemegang]) map[r.nama_pemegang]={
+      nama:r.nama_pemegang, jenis:r.jenis,
+      lokal: r.lokal !== false,
+      negara: r.negara || 'Indonesia',
+      holdings:[]
+    };
+    map[r.nama_pemegang].holdings.push(r);
+  });
+
+  // Populate dropdown negara
+  const negaraList = [...new Set(Object.values(map).map(i=>i.negara))].sort();
+  const negSel = document.getElementById('i-negara');
+  const curNeg = negSel.value;
+  negSel.innerHTML = '<option value="">Semua Negara</option>' +
+    negaraList.map(n=>`<option value="${n}"${n===curNeg?' selected':''}>${n}</option>`).join('');
+
+  let invs = Object.values(map).filter(inv=>{
+    if(q && !inv.nama.toLowerCase().includes(q)) return false;
+    if(asal==='lokal' && !inv.lokal) return false;
+    if(asal==='asing' && inv.lokal) return false;
+    if(negFilter && inv.negara !== negFilter) return false;
+    return true;
+  });
+
+  invs.forEach(inv=>{
+    inv.holdings.sort((a,b)=>b.persentase-a.persentase);
+    inv.maxPct=inv.holdings[0]?.persentase||0;
+  });
+
+  if(sort==='count') invs.sort((a,b)=>b.holdings.length-a.holdings.length);
+  else if(sort==='maxpct') invs.sort((a,b)=>b.maxPct-a.maxPct);
+  else invs.sort((a,b)=>a.nama.localeCompare(b.nama));
+
+  // Group header info
+  const lokalCount = Object.values(map).filter(i=>i.lokal).length;
+  const asingCount = Object.values(map).filter(i=>!i.lokal).length;
+  const gh = document.getElementById('i-group-header');
+  if (!asal && !negFilter && !q) {
+    gh.style.display = 'flex';
+    gh.style.gap = '10px';
+    gh.style.flexWrap = 'wrap';
+    gh.innerHTML = `
+      <button onclick="document.getElementById('i-asal').value='';rI()" class="group-pill ${!asal?'gp-all':''}">
+        Semua <strong>${Object.keys(map).length}</strong>
+      </button>
+      <button onclick="document.getElementById('i-asal').value='lokal';rI()" class="group-pill ${asal==='lokal'?'gp-lokal':''}">
+        🇮🇩 Lokal Indonesia <strong>${lokalCount}</strong>
+      </button>
+      <button onclick="document.getElementById('i-asal').value='asing';rI()" class="group-pill ${asal==='asing'?'gp-asing':''}">
+        🌏 Asing <strong>${asingCount}</strong>
+      </button>
+    `;
+  } else {
+    gh.style.display = 'block';
+    const label = asal==='lokal'?'🇮🇩 Investor Lokal Indonesia':
+                  asal==='asing'?'🌏 Investor Asing':
+                  negFilter?`📍 Negara: ${negFilter}`:'';
+    gh.innerHTML = label ? `<div style="font-size:13px;font-weight:600;color:var(--ink2);padding:8px 0">${label} — <strong>${invs.length}</strong> investor</div>` : '';
+  }
+
+  const sl=slc(invs,'i');
+  document.getElementById('i-grid').innerHTML=sl.length?sl.map(inv=>{
+    const ini=inv.nama.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    const mxH=inv.holdings[0]?.persentase||1;
+    const flagColor = inv.lokal ? '#e6f4ec' : '#e8eef8';
+    const flagText = inv.lokal ? '🇮🇩' : '🌏';
+    return`<div class="inv-card" onclick="openInvestor('${esc(inv.nama)}')">
+      <div class="inv-card-top">
+        <div class="inv-avatar" style="background:${flagColor};color:var(--ink);font-size:16px">${flagText}</div>
+        <div style="flex:1;min-width:0">
+          <div class="inv-name" title="${inv.nama}">${inv.nama}</div>
+          <div class="inv-sub">${inv.negara} · ${inv.jenis}</div>
+        </div>
+      </div>
+      <div class="inv-tags">
+        <span class="tag">${inv.holdings.length} emiten</span>
+        <span class="tag">Maks ${inv.maxPct.toFixed(2)}%</span>
+        <span class="tag" style="${inv.lokal?'background:var(--up-bg);color:var(--up)':'background:var(--bl-bg);color:var(--bl)'}">${inv.lokal?'Lokal':'Asing'}</span>
+      </div>
+      <div class="inv-holdings">
+        ${inv.holdings.slice(0,5).map(h=>`<div class="ih-row"><span class="ih-code">${h.kode_emiten}</span><div class="ih-track"><div class="ih-fill" style="width:${(h.persentase/mxH*100).toFixed(1)}%"></div></div><span class="ih-pct">${h.persentase.toFixed(2)}%</span></div>`).join('')}
+        ${inv.holdings.length>5?`<div style="font-size:11px;color:var(--ink3);padding-top:2px">+${inv.holdings.length-5} lainnya</div>`:''}
+      </div>
+    </div>`;
+  }).join(''):`<div class="empty-msg">Tidak ada investor yang cocok</div>`;
+  pgn('i',invs.length);
+}
+
+// ── TAB: EMITEN ───────────────────────────────────────────────────
+function rE() {
+  const q=v('e-q').toLowerCase(), sort=v('e-sort');
+  const map={};
+  RAW.filter(r=>r.bulan===CUR).forEach(r=>{
+    if(!map[r.kode_emiten])map[r.kode_emiten]={kode:r.kode_emiten,nama:r.nama_emiten,invs:[]};
+    map[r.kode_emiten].invs.push(r);
+  });
+  let ems=Object.values(map).filter(em=>!q||em.kode.toLowerCase().includes(q)||em.nama.toLowerCase().includes(q));
+  ems.forEach(em=>{em.invs.sort((a,b)=>b.persentase-a.persentase);em.maxPct=em.invs[0]?.persentase||0});
+  if(sort==='count')ems.sort((a,b)=>b.invs.length-a.invs.length);
+  else if(sort==='kode')ems.sort((a,b)=>a.kode.localeCompare(b.kode));
+  else ems.sort((a,b)=>b.maxPct-a.maxPct);
+  const sl=slc(ems,'e');
+  document.getElementById('e-body').innerHTML=sl.length?sl.map(em=>{
+    const top=em.invs[0];
+    return`<tr>
+      <td><button class="code-btn" onclick="openEmiten('${em.kode}')">${em.kode}</button></td>
+      <td><div class="nm">${em.nama}</div></td>
+      <td class="r"><strong>${em.invs.length}</strong></td>
+      <td class="r hm"><span class="pct-num">${em.maxPct.toFixed(2)}%</span></td>
+      <td><div class="nm">${top?.nama_pemegang||'—'}</div><div class="nm2">${top?.jenis||''}</div></td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="5" class="empty-msg">Tidak ada data</td></tr>`;
+  pgn('e',ems.length);
+}
+
+// ── DRAWERS ───────────────────────────────────────────────────────
+function openEmiten(kode) {
+  const all=RAW.filter(r=>r.kode_emiten===kode);
+  const cur=all.filter(r=>r.bulan===CUR).sort((a,b)=>b.persentase-a.persentase);
+  document.getElementById('dr-eye').textContent='Emiten · '+kode;
+  document.getElementById('dr-title').textContent=cur[0]?.nama_emiten||kode;
+  const mxP=cur[0]?.persentase||1;
+  const invNames=[...new Set(all.map(r=>r.nama_pemegang))];
+
+  let html=`<div class="dr-sec"><div class="dr-sec-title">Kepemilikan ${blabel(CUR)}</div>
+    ${cur.length?cur.map(r=>`<div class="mrow">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600">${r.nama_pemegang}</div>
+        <div style="font-size:11px;color:var(--ink3)">${r.jenis} · ${r.jumlah_saham?r.jumlah_saham.toLocaleString('id')+' saham':'—'}</div>
+      </div>
+      <div class="mbar-wrap" style="flex:0 0 175px">
+        <div class="mbar-bg"><div class="mbar-fill" style="width:${(r.persentase/mxP*100).toFixed(1)}%"></div></div>
+        <div class="mpct">${r.persentase.toFixed(2)}%</div>
+      </div>
+    </div>`).join(''):'<div style="color:var(--ink3);font-size:13px">Tidak ada data bulan ini</div>'}
+  </div>`;
+
+  if(BULANS.length>1){
+    html+=`<div class="dr-sec"><div class="dr-sec-title">Perubahan Bulanan per Investor</div>`;
+    invNames.forEach(inv=>{
+      const mxB=Math.max(...BULANS.map(b=>{const r=all.find(x=>x.bulan===b&&x.nama_pemegang===inv);return r?r.persentase:0}),1);
+      html+=`<div style="margin-bottom:16px">
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px;color:var(--ink2)">${inv}</div>
+        ${BULANS.map((b,i)=>{
+          const r=all.find(x=>x.bulan===b&&x.nama_pemegang===inv);
+          const prv=i>0?all.find(x=>x.bulan===BULANS[i-1]&&x.nama_pemegang===inv):null;
+          if(!r)return`<div class="mrow"><span class="mlbl">${blabel(b)}</span><span style="font-size:11px;color:var(--ink3)">—</span></div>`;
+          const d=prv?parseFloat((r.persentase-prv.persentase).toFixed(2)):null;
+          return`<div class="mrow"><span class="mlbl">${blabel(b)}</span>
+            <div class="mbar-wrap">
+              <div class="mbar-bg"><div class="mbar-fill" style="width:${(r.persentase/mxB*100).toFixed(1)}%"></div></div>
+              <div class="mpct">${r.persentase.toFixed(2)}%</div>
+              ${d!==null?`<span class="delta ${d>0?'up':d<0?'dn':'fl'}" style="font-size:10px;padding:1px 6px">${d>0?'+':''}${d.toFixed(2)}%</span>`:''}
+            </div></div>`;
+        }).join('')}
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  openDr(html);
+}
+
+function openInvestor(nama) {
+  const all=RAW.filter(r=>r.nama_pemegang===nama);
+  const cur=all.filter(r=>r.bulan===CUR).sort((a,b)=>b.persentase-a.persentase);
+  document.getElementById('dr-eye').textContent='Investor';
+  document.getElementById('dr-title').textContent=nama;
+  const mxP=cur[0]?.persentase||1;
+  const emitens=[...new Set(all.map(r=>r.kode_emiten))].sort();
+
+  let html=`<div class="dr-sec"><div class="dr-sec-title">Portofolio — ${blabel(CUR)}</div>
+    ${cur.length?cur.map(r=>`<div class="mrow">
+      <button class="code-btn" style="min-width:44px" onclick="closeDr();setTimeout(()=>openEmiten('${r.kode_emiten}'),150)">${r.kode_emiten}</button>
+      <div style="flex:1;font-size:12px;color:var(--ink2);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.nama_emiten}</div>
+      <div class="mbar-wrap" style="flex:0 0 160px">
+        <div class="mbar-bg"><div class="mbar-fill" style="width:${(r.persentase/mxP*100).toFixed(1)}%"></div></div>
+        <div class="mpct">${r.persentase.toFixed(2)}%</div>
+      </div>
+    </div>`).join(''):'<div style="color:var(--ink3);font-size:13px">Tidak ada kepemilikan bulan ini</div>'}
+  </div>`;
+
+  if(BULANS.length>1){
+    html+=`<div class="dr-sec"><div class="dr-sec-title">Perubahan Bulanan per Emiten</div>`;
+    emitens.forEach(kode=>{
+      const mxB=Math.max(...BULANS.map(b=>{const r=all.find(x=>x.bulan===b&&x.kode_emiten===kode);return r?r.persentase:0}),1);
+      const nm=all.find(x=>x.kode_emiten===kode)?.nama_emiten||'';
+      html+=`<div style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <button class="code-btn" onclick="closeDr();setTimeout(()=>openEmiten('${kode}'),150)">${kode}</button>
+          <span style="font-size:11px;color:var(--ink3)">${nm}</span>
+        </div>
+        ${BULANS.map((b,i)=>{
+          const r=all.find(x=>x.bulan===b&&x.kode_emiten===kode);
+          const prv=i>0?all.find(x=>x.bulan===BULANS[i-1]&&x.kode_emiten===kode):null;
+          if(!r)return`<div class="mrow"><span class="mlbl">${blabel(b)}</span><span style="font-size:11px;color:var(--ink3)">—</span></div>`;
+          const d=prv?parseFloat((r.persentase-prv.persentase).toFixed(2)):null;
+          return`<div class="mrow"><span class="mlbl">${blabel(b)}</span>
+            <div class="mbar-wrap">
+              <div class="mbar-bg"><div class="mbar-fill" style="width:${(r.persentase/mxB*100).toFixed(1)}%"></div></div>
+              <div class="mpct">${r.persentase.toFixed(2)}%</div>
+              ${d!==null?`<span class="delta ${d>0?'up':d<0?'dn':'fl'}" style="font-size:10px;padding:1px 6px">${d>0?'+':''}${d.toFixed(2)}%</span>`:''}
+            </div></div>`;
+        }).join('')}
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  openDr(html);
+}
+
+function openDr(html){document.getElementById('dr-body').innerHTML=html;document.getElementById('overlay').classList.add('open');document.body.style.overflow='hidden'}
+function closeDr(e){if(e&&document.getElementById('drawer').contains(e.target))return;document.getElementById('overlay').classList.remove('open');document.body.style.overflow=''}
+
+// ── UTILS ─────────────────────────────────────────────────────────
+function v(id){return document.getElementById(id)?.value||''}
+function slc(arr,id){const pg=PG[id],pp=PP[id];return arr.slice((pg-1)*pp,pg*pp)}
+function pgn(id,total){
+  const pg=PG[id],pp=PP[id],tp=Math.max(1,Math.ceil(total/pp));
+  const s=(pg-1)*pp+1,e=Math.min(pg*pp,total);
+  document.getElementById(id+'-info').textContent=total>0?`${s}–${e} dari ${total.toLocaleString('id')}`:'0 data';
+  let b=`<button class="pb" onclick="goP('${id}',${pg-1})" ${pg<=1?'disabled':''}>←</button>`;
+  for(let i=Math.max(1,pg-1);i<=Math.min(tp,pg+1);i++)b+=`<button class="pb${i===pg?' on':''}" onclick="goP('${id}',${i})">${i}</button>`;
+  if(Math.min(tp,pg+1)<tp)b+=`<span style="padding:0 3px;color:var(--ink3)">…</span><button class="pb" onclick="goP('${id}',${tp})">${tp}</button>`;
+  b+=`<button class="pb" onclick="goP('${id}',${pg+1})" ${pg>=tp?'disabled':''}>→</button>`;
+  document.getElementById(id+'-btns').innerHTML=b;
+}
+function goP(id,p){PG[id]=p;if(id==='p')rP();else if(id==='a')rA();else if(id==='i')rI();else rE();window.scrollTo({top:0,behavior:'smooth'})}
+function blabel(b){if(!b)return'';const[y,m]=b.split('-');return['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'][+m]+' '+y}
+function esc(s){return(s||'').replace(/'/g,"\\'")}
+function log(msg,pct,cls){
+  const el=document.getElementById('uz-log');
+  el.textContent=msg; el.className='uz-log'+(cls?' '+cls:'');
+  if(pct!==null&&pct!==undefined)document.getElementById('prog-fill').style.width=pct+'%';
+}
+function showProg(show){document.getElementById('prog').style.display=show?'block':'none'}
+
+// ── ADMIN MODE ────────────────────────────────────────────────────
+let IS_ADMIN = false;
+let _logoClicks = 0;
+// Kredensial admin — ganti sesuai keinginan
+const _ADMIN_USER = 'danielhenok9';
+const _ADMIN_PASS = 'maricuanbersama';
+
+function _logoClick() {
+  _logoClicks++;
+  if (_logoClicks >= 3) {
+    _logoClicks = 0;
+    if (IS_ADMIN) {
+      IS_ADMIN = false;
+      document.getElementById('admin-bar').classList.remove('show');
+      document.getElementById('upload-zone').style.display = 'none';
+      document.getElementById('login-modal').style.display = 'none';
+    } else {
+      document.getElementById('login-modal').style.display = 'flex';
+      setTimeout(() => document.getElementById('login-user').focus(), 100);
+    }
+  }
+}
+
+function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+  const err  = document.getElementById('login-err');
+  if (user === _ADMIN_USER && pass === _ADMIN_PASS) {
+    document.getElementById('login-modal').style.display = 'none';
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+    err.textContent = '';
+    IS_ADMIN = true;
+    initAdminMode();
+  } else {
+    err.textContent = '❌ Username atau password salah.';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+  }
+}
+
+function cancelLogin() {
+  document.getElementById('login-modal').style.display = 'none';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-err').textContent = '';
+}
+
+// Enter key di form login
+function loginKeydown(e) {
+  if (e.key === 'Enter') doLogin();
+  if (e.key === 'Escape') cancelLogin();
+}
+
+function initAdminMode() {
+  document.getElementById('admin-bar').classList.add('show');
+  const uz = document.getElementById('upload-zone');
+  uz.style.display = 'block';
+  uz.style.marginTop = '1rem';
+  // Scroll ke upload zone supaya keliatan
+  setTimeout(() => uz.scrollIntoView({behavior:'smooth', block:'center'}), 200);
+}
+
+function updateAdminInfo() {
+  const bulans = [...new Set(RAW.map(r=>r.bulan))];
+  document.getElementById('admin-info').textContent =
+    RAW.length.toLocaleString('id') + ' records · ' + bulans.length + ' bulan';
+  document.getElementById('btn-publish').disabled = RAW.length === 0;
+}
+
+async function publishData() {
+  if (!RAW.length) return;
+  const btn = document.getElementById('btn-publish');
+  btn.textContent = '⏳ Menyiapkan file…';
+  btn.disabled = true;
+
+  try {
+    // Coba fetch template HTML dari server
+    let template = '';
+    try {
+      const resp = await fetch(location.href.split('?')[0], {cache:'no-store'});
+      if (resp.ok) template = await resp.text();
+    } catch(e) {}
+
+    // Fallback: pakai outerHTML kalau fetch gagal
+    if (!template) {
+      template = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    }
+
+    // Hapus EMBEDDED_DATA lama kalau ada
+    template = template.replace(/<script[^>]*>\s*window\.EMBEDDED_DATA\s*=[\s\S]*?<\/script>\s*/gi, '');
+
+    // Buat data object
+    const dataObj = {
+      updated: new Date().toLocaleString('id-ID', {
+        day:'2-digit', month:'long', year:'numeric',
+        hour:'2-digit', minute:'2-digit'
+      }),
+      total: RAW.length,
+      bulans: [...new Set(RAW.map(r=>r.bulan))].sort(),
+      records: RAW
+    };
+
+    // Sisipkan data sebelum </head>
+    const tag = '<script>window.EMBEDDED_DATA=' + JSON.stringify(dataObj) + ';<\/script>';
+    template = template.includes('</head>')
+      ? template.replace('</head>', tag + '\n</head>')
+      : tag + template;
+
+    // Download file
+    const blob = new Blob([template], {type:'text/html;charset=utf-8'});
+    const a = Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(blob),
+      download: 'index.html'
+    });
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+
+    // Tampilkan instruksi upload
+    const bulans = dataObj.bulans.map(b=>blabel(b)).join(', ');
+    btn.textContent = '✅ File didownload!';
+    btn.style.background = '#1a6b3c';
+    document.getElementById('admin-info').textContent =
+      RAW.length.toLocaleString('id') + ' records · ' + dataObj.bulans.length + ' bulan (' + bulans + ')';
+
+    // Tampilkan modal instruksi
+    showUploadInstructions();
+
+    setTimeout(() => {
+      btn.textContent = '⬇ Download & Deploy';
+      btn.style.background = '';
+      btn.disabled = false;
+    }, 8000);
+
+  } catch(e) {
+    console.error(e);
+    btn.textContent = '❌ Error: ' + e.message;
+    btn.style.background = '#b83030';
+    setTimeout(() => {
+      btn.textContent = '⬇ Download & Deploy';
+      btn.style.background = '';
+      btn.disabled = false;
+    }, 4000);
+  }
+}
+
+function showUploadInstructions() {
+  document.getElementById('upload-instructions').style.display = 'flex';
+}
+function closeInstructions() {
+  document.getElementById('upload-instructions').style.display = 'none';
+}
+
+// ── AUTO-LOAD DARI LOCALSTORAGE SAAT HALAMAN DIBUKA ──────────────
+(function() {
+  // Prioritas 1: Data embed dari hasil publish admin
+  if (window.EMBEDDED_DATA && window.EMBEDDED_DATA.records && window.EMBEDDED_DATA.records.length > 0) {
+    RAW = window.EMBEDDED_DATA.records;
+    initView();
+    const banner = document.getElementById('data-banner');
+    const bulans = [...new Set(RAW.map(r=>r.bulan))].sort();
+    banner.classList.add('show');
+    document.getElementById('data-banner-text').innerHTML =
+      '<strong>' + RAW.length.toLocaleString('id') + ' records</strong> dari <strong>' +
+      bulans.length + ' bulan</strong> · Diperbarui: ' + (window.EMBEDDED_DATA.updated||'—') +
+      ' · Bulan: ' + bulans.map(b=>blabel(b)).join(', ');
+    document.getElementById('upload-zone').style.display = 'none';
+    return;
+  }
+
+  // Prioritas 2: Cache localStorage
+  if (loadFromStorage()) {
+    initView();
+    document.getElementById('upload-zone').style.display = 'none';
+    const el = document.getElementById('uz-log');
+    el.textContent = '✅ Data dari cache browser'; el.className = 'uz-log ok';
+    return;
+  }
+
+  // Tidak ada data sama sekali — sembunyikan upload, tampilkan banner
+  document.getElementById('upload-zone').style.display = 'none';
+  const banner = document.getElementById('data-banner');
+  banner.classList.add('show');
+  banner.style.background = 'var(--amber-bg)';
+  banner.style.borderColor = 'var(--amber)';
+  document.getElementById('data-banner-text').innerHTML =
+    '<strong style="color:var(--amber)">Data belum tersedia.</strong> ' +
+    '<span style="color:var(--ink2)">Admin sedang mempersiapkan data. ' +
+    '<small style="opacity:.6">Klik logo 3x untuk admin</small></span>';
+})();
+</script>
+</body>
+</html>
